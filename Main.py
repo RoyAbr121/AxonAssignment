@@ -1,3 +1,5 @@
+import datetime
+
 import cv2
 from multiprocessing import Process, Queue
 import imutils
@@ -56,6 +58,8 @@ def presenter(input_queue):
         if frame is None:
             break
 
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cv2.putText(frame, current_time, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         cv2.imshow("Presenter", frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
