@@ -2,6 +2,7 @@ import cv2
 from multiprocessing import Process, Queue
 import imutils
 
+
 def streamer(video_path, output_queue):
     cap = cv2.VideoCapture(video_path)
 
@@ -30,7 +31,7 @@ def detector(input_queue, output_queue):
 
         if first_frame is None:
             first_frame = gray
-            output_queue.put(frame)  # Pass the original frame forward
+            output_queue.put(frame)
             continue
 
         frame_delta = cv2.absdiff(first_frame, gray)
@@ -44,9 +45,10 @@ def detector(input_queue, output_queue):
                 continue
 
             (x, y, w, h) = cv2.boundingRect(contour)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            frame[y:y + h, x:x + w] = cv2.GaussianBlur(frame[y:y + h, x:x + w], (51, 51), 0)
 
         output_queue.put(frame)
+
 
 def presenter(input_queue):
     while True:
@@ -61,6 +63,7 @@ def presenter(input_queue):
 
     cv2.destroyAllWindows()
 
+
 def main():
     streamer_to_detector_queue = Queue(maxsize=10)
     detector_to_presenter_queue = Queue(maxsize=10)
@@ -71,7 +74,6 @@ def main():
     detector_process = Process(target=detector, args=(streamer_to_detector_queue, detector_to_presenter_queue))
     presenter_process = Process(target=presenter, args=(detector_to_presenter_queue,))
 
-
     streamer_process.start()
     detector_process.start()
     presenter_process.start()
@@ -79,6 +81,7 @@ def main():
     streamer_process.join()
     detector_process.join()
     presenter_process.join()
+
 
 if __name__ == "__main__":
     main()
